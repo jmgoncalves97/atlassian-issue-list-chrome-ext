@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const taskListElement = document.getElementById('taskList');
   let allTasksGlobally = [];
+  let completedTasksGlobally = {};
 
   const ISSUE_TRACKER_PAGE_PATTERNS = [
     "https://*.atlassian.net/",
@@ -84,8 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
         task.completed = checkbox.checked;
         if (task.completed) {
           listItem.classList.add('completed');
+          completedTasksGlobally[task.id] = true; // Mark as completed
         } else {
           listItem.classList.remove('completed');
+          delete completedTasksGlobally[task.id]; // Unmark
         }
         saveTasksToStorage();
         reorderTaskList();
@@ -97,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const summarySpan = document.createElement('span');
       summarySpan.classList.add('task-summary');
       summarySpan.textContent = task.summary;
-      
       detailsDiv.appendChild(summarySpan);
 
       const tagsContainer = document.createElement('div');
@@ -142,14 +144,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function saveTasksToStorage() {
-    chrome.storage.local.set({ storedTasks: allTasksGlobally }, () => {
-      console.log('Tasks saved to storage.');
+    chrome.storage.local.set({
+      storedTasks: allTasksGlobally,
+      completedTasks: completedTasksGlobally
+    }, () => {
+      console.log('Tasks and completed status saved to storage.');
     });
   }
 
   function loadTasksFromStorage(callback) {
-    chrome.storage.local.get(['storedTasks'], (result) => {
+    chrome.storage.local.get(['storedTasks', 'completedTasks'], (result) => {
       allTasksGlobally = result.storedTasks || [];
+      completedTasksGlobally = result.completedTasks || {};
       if (callback) callback();
     });
   }
@@ -162,6 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const taskId = scrapedIssue.id || generateTaskId(scrapedIssue.summary);
       if (!taskId) return;
 
+      const isCompleted = completedTasksGlobally[taskId] || false;
+
       if (taskMapFromStorage.has(taskId)) {
         const existingTask = taskMapFromStorage.get(taskId);
         newMasterTaskList.push({
@@ -170,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
           priority: scrapedIssue.priority,
           key: scrapedIssue.key,
           parent: scrapedIssue.parent,
+          completed: isCompleted,
         });
         taskMapFromStorage.delete(taskId);
       } else {
@@ -179,13 +188,15 @@ document.addEventListener('DOMContentLoaded', () => {
           priority: scrapedIssue.priority,
           key: scrapedIssue.key,
           parent: scrapedIssue.parent,
-          completed: false,
+          completed: isCompleted,
         });
       }
     });
 
     taskMapFromStorage.forEach(storedTask => {
-      newMasterTaskList.push({ ...storedTask });
+      if (storedTask.completed) {
+        newMasterTaskList.push({ ...storedTask });
+      }
     });
 
     allTasksGlobally = newMasterTaskList;
