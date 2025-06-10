@@ -97,12 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const summarySpan = document.createElement('span');
       summarySpan.classList.add('task-summary');
       summarySpan.textContent = task.summary;
+      
+      detailsDiv.appendChild(summarySpan);
 
+      const tagsContainer = document.createElement('div');
+      tagsContainer.classList.add('task-tags-container');
+
+      const priorityText = task.priority || 'N/A';
       const prioritySpan = document.createElement('span');
       prioritySpan.classList.add('task-priority');
-      const priorityText = task.priority || 'N/A';
       prioritySpan.textContent = priorityText;
-
       const priorityLower = priorityText.toLowerCase();
       if (priorityLower.includes('highest') || priorityLower.includes('high')) {
         prioritySpan.classList.add('priority-high');
@@ -113,9 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         prioritySpan.classList.add('priority-default');
       }
+      tagsContainer.appendChild(prioritySpan);
 
-      detailsDiv.appendChild(summarySpan);
-      detailsDiv.appendChild(prioritySpan);
+      if (task.key) {
+        const keySpan = document.createElement('span');
+        keySpan.classList.add('task-key');
+        keySpan.textContent = task.key;
+        tagsContainer.appendChild(keySpan);
+      }
+
+      detailsDiv.appendChild(tagsContainer);
+
+      if (task.parent) {
+        const parentSpan = document.createElement('span');
+        parentSpan.classList.add('task-parent');
+        parentSpan.textContent = task.parent;
+        detailsDiv.appendChild(parentSpan);
+      }
 
       listItem.appendChild(checkbox);
       listItem.appendChild(detailsDiv);
@@ -150,6 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ...existingTask,
           summary: scrapedIssue.summary,
           priority: scrapedIssue.priority,
+          key: scrapedIssue.key,
+          parent: scrapedIssue.parent,
         });
         taskMapFromStorage.delete(taskId);
       } else {
@@ -157,6 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
           id: taskId,
           summary: scrapedIssue.summary,
           priority: scrapedIssue.priority,
+          key: scrapedIssue.key,
+          parent: scrapedIssue.parent,
           completed: false,
         });
       }
