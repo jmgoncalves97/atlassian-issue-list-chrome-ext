@@ -81,7 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = task.completed;
-      checkbox.addEventListener('change', () => {
+      checkbox.addEventListener('change', (event) => {
+        event.stopPropagation(); // Stop propagation for the 'change' event
         task.completed = checkbox.checked;
         if (task.completed) {
           listItem.classList.add('completed');
@@ -93,9 +94,22 @@ document.addEventListener('DOMContentLoaded', () => {
         saveTasksToStorage();
         reorderTaskList();
       });
+      // Add a click listener to the checkbox as well to cover all bases
+      checkbox.addEventListener('click', (event) => {
+          event.stopPropagation(); // Stop propagation for the 'click' event
+      });
+
 
       const detailsDiv = document.createElement('div');
       detailsDiv.classList.add('task-details');
+
+      if (task.link) {
+        detailsDiv.style.cursor = 'pointer';
+        detailsDiv.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent bubbling up to listItem if listItem had a click listener
+            chrome.tabs.create({ url: task.link });
+        });
+      }
 
       const summarySpan = document.createElement('span');
       summarySpan.classList.add('task-summary');
@@ -178,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
           priority: scrapedIssue.priority,
           key: scrapedIssue.key,
           parent: scrapedIssue.parent,
+          link: scrapedIssue.link,
           completed: isCompleted,
         });
         taskMapFromStorage.delete(taskId);
@@ -188,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
           priority: scrapedIssue.priority,
           key: scrapedIssue.key,
           parent: scrapedIssue.parent,
+          link: scrapedIssue.link,
           completed: isCompleted,
         });
       }

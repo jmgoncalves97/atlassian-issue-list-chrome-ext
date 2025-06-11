@@ -50,6 +50,7 @@ function getIssuesAndPriorities() {
   const priorityElements = document.querySelectorAll('[data-testid="issue-field-priority-readview-full.ui.priority.wrapper"]');
   const keys = document.querySelectorAll('[data-vc="native-issue-table-ui-issue-key-cell"]');
   const parentElements = getColumnData(document.querySelector('[aria-label="Pai"]'));
+  const issueLinks = document.querySelectorAll('[data-vc="native-issue-table-ui-issue-key-cell"] a');
   const issuesData = [];
 
   for (let i = 0; i < issueElements.length; i++) {
@@ -69,12 +70,17 @@ function getIssuesAndPriorities() {
 
     const parent = parentElements.columnValues[i];
 
+    const issueLink = (issueLinks[i] && issueLinks[i].href)
+                         ? issueLinks[i].href
+                         : '';
+
     issuesData.push({
       id: taskId,
       summary: summary,
       priority: priorityText,
       key: key,
-      parent: parent
+      parent: parent,
+      link: issueLink
     });
   }
   return issuesData;

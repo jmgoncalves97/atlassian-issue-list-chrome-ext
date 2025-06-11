@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Atlassian Issue Tracker Helper",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Extracts Atlassian issues and priorities, allows marking them as completed, and persists tasks across tabs.",
   "permissions": [
     "storage",
